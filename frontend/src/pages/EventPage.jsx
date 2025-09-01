@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import MainNavigation from '../components/MainNavigation.jsx';
+import {Link} from 'react-router-dom';
 
 const EventPage = () => {
 
@@ -7,25 +7,26 @@ const EventPage = () => {
 
     // API CALL
     const fetchEvents = async () => {
-        const resopnse = await fetch('http://localhost:9000/api/events');
-        const data = await resopnse.json();
+        const response = await fetch('http://localhost:9000/api/events');
+        const data = await response.json();
         console.log(data);
 
         setEventList(data);
     };
 
 
-
     useEffect(() => {
         fetchEvents();
-    },[])
-
+    }, []);
 
     return (
         <>
-         <h1>Event Page</h1>
+            <h1>Event Page</h1>
             <ul>
-                {eventList.map(event => <li key={event.id}>{event.title}</li>)}
+                {eventList.map(({eventId, title}) =>
+                    <li key={eventId}>
+                        <Link to={`/events/${eventId}`}>{title}</Link>
+                    </li>)}
             </ul>
         </>
     );
