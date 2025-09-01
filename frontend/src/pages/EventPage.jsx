@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
+import EventList from '../components/EventList.jsx';
 
 const EventPage = () => {
 
@@ -20,15 +21,7 @@ const EventPage = () => {
     }, []);
 
     return (
-        <>
-            <h1>Event Page</h1>
-            <ul>
-                {eventList.map(({eventId, title}) =>
-                    <li key={eventId}>
-                        <Link to={`/events/${eventId}`}>{title}</Link>
-                    </li>)}
-            </ul>
-        </>
+            <EventList eventList={eventList}/>
     );
 };
 
