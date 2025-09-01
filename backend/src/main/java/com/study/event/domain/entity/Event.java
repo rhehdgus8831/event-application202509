@@ -1,6 +1,7 @@
 package com.study.event.domain.entity;
 
 
+import com.study.event.domain.dto.request.EventCreate;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -38,4 +39,11 @@ public class Event {
 
     @CreationTimestamp
     private LocalDateTime createdAt; // 이벤트 등록 날짜
+
+    public void changeEvent(EventCreate dto) {
+        this.title = dto.title();
+        this.description = dto.desc();
+        this.image = dto.imageUrl();
+        this.date = dto.beginDate();
+    }
 }
