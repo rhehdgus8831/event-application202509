@@ -1,21 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {useParams} from 'react-router-dom';
+import {useLoaderData, useParams} from 'react-router-dom';
 
 // /events/:id
 const EventDetailPage = () => {
 
     const {eventId} = useParams();
 
-    const [detailEvent, setDetailEvent] = useState({});
-
-    useEffect(() => {
-        (async () => {
-            const response = await fetch(`http://localhost:9000/api/events/${eventId}`);
-            const data = await response.json();
-            console.log(data);
-            setDetailEvent(data);
-        })();
-    }, []);
+    const detailEvent = useLoaderData();
 
     return (
         <>
