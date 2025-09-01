@@ -1,6 +1,7 @@
 package com.study.event.service;
 
 import com.study.event.domain.dto.request.EventCreate;
+import com.study.event.domain.dto.response.EventResponse;
 import com.study.event.domain.entity.Event;
 import com.study.event.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -20,8 +22,11 @@ public class EventService {
 
     // 전체 조회
     @Transactional(readOnly = true)
-    public List<Event> getEvents() {
-        return eventRepository.findAll();
+    public List<EventResponse> getEvents() {
+        return eventRepository.findAll()
+                .stream()
+                .map(EventResponse::from)
+                .collect(Collectors.toList());
     }
 
     //이벤트 생성
