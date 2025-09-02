@@ -14,6 +14,7 @@ public class CorsConfig implements WebMvcConfigurer {
             "http://localhost:5175",
             "http://localhost:5176",
             "http://localhost:5179",
+            "http://localhost:5181",
 
     };
 
