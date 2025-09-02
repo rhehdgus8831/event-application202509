@@ -1,7 +1,7 @@
 import styles from './EventItem.module.scss';
-import {Link, useNavigate} from 'react-router-dom';
+import {Link, useNavigate, useSubmit} from 'react-router-dom';
 
-const EventItem = ({event}) => {
+const EventItem = ({ event }) => {
     const {
         id,
         title,
@@ -12,31 +12,13 @@ const EventItem = ({event}) => {
 
     const navigate = useNavigate();
 
-    const handleDelete = async () => {
+    // Form 컴포넌트 없이 action함수를 작동시키는 법
+    const submit = useSubmit();
 
-        const cofirmed = window.confirm('정말로 삭제하시겠습니까?');
-
-        if (!cofirmed){
-            return;
-        }
-        try{
-            const response = await fetch(`http://localhost:9000/api/events/${id}`, {
-                method: 'DELETE'
-            });
-
-            if (response.ok) {
-                alert('삭제가 완료되었습니다!')
-                navigate('/events');
-            }else {
-                alert('삭제에 실패했습니다.')
-            }
-        }catch(error){
-            console.error(error);
-            alert('삭제 중 오류가 발생했습니다.')
-        }
-
+    const handleRemove = e => {
+        // Form없이 action 함수 트리거 - 낙관적 업데이트
+        submit(null, {method:`DELETE`})
     };
-
 
     return (
         <article className={styles.event}>
@@ -48,11 +30,8 @@ const EventItem = ({event}) => {
             <time>{date}</time>
             <p>{description}</p>
             <menu className={styles.actions}>
-                <Link to={`edit`}>Edit</Link>
-                <button
-                    onClick={handleDelete}
-                >Delete
-                </button>
+                <Link to='edit'>Edit</Link>
+                <button onClick={handleRemove}>Delete</button>
             </menu>
         </article>
     );
