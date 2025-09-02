@@ -28,7 +28,7 @@ const router = createBrowserRouter([
                         index: true,
                         element: <EventPage/>,
                         // loader 함수는 언제 실행되냐? 페이지가 라우팅될 때 트리거 됨
-                        loader: eventsListLoader
+                        // loader: eventsListLoader
                     },
                     {
                         path: 'new',
