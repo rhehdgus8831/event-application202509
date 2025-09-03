@@ -1,6 +1,8 @@
 import {useEffect, useRef, useState} from 'react';
 import styles from './SignUpForm.module.scss';
 import {AUTH_API_URL} from '../../config/host-config.js';
+import {debounce} from 'lodash';
+
 const EmailInput = () => {
 
     const emailRef = useRef();
@@ -12,7 +14,7 @@ const EmailInput = () => {
     // 화면이 랜더링되자마자 입력창에 포커싱
     useEffect(() => {
         emailRef.current.focus();
-    },[]);
+    }, []);
 
     // 이메일 입력 이벤트
     const handleEmail = e => {
@@ -21,16 +23,16 @@ const EmailInput = () => {
         // 이메일 패턴 검증
 
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // 간단한 이메일 패턴 검사
-        if(!emailPattern.test(inputValue)){
+        if (!emailPattern.test(inputValue)) {
             setError('이메일이 올바르지 않습니다.');
-            return
+            return;
         }
 
         // 이메일 중복확인 검증
         (async () => {
-            const response = await fetch(`${AUTH_API_URL}/check-email?email=${inputValue}`)
-            const {isDuplicate,message} = await response.json()
-            if (isDuplicate){
+            const response = await fetch(`${AUTH_API_URL}/check-email?email=${inputValue}`);
+            const {isDuplicate, message} = await response.json();
+            if (isDuplicate) {
                 setError(message);
             }
         })();
@@ -45,9 +47,9 @@ const EmailInput = () => {
             <input
                 ref={emailRef}
                 className={error ? styles.invalidInput : ''}
-                type='email'
-                placeholder='Enter your email'
-                onChange={handleEmail}
+                type="email"
+                placeholder="Enter your email"
+                onChange={debounce(handleEmail,1000)}
             />
             {error && <p className={styles.errorMessage}>{error}</p>}
         </>
