@@ -35,7 +35,7 @@ const EmailInput = ({onSuccess}) => {
             if (isDuplicate) {
                 setError(message);
             } else {
-                onSuccess();
+                onSuccess(inputValue);
             }
         })();
 
