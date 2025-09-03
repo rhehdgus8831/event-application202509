@@ -27,6 +27,7 @@ public class EventUserService {
 
     // 이메일 발송을 위한 의존객체
     private final JavaMailSender mailSender;
+
     private final EventUserRepository eventUserRepository;
     private final EmailVerificationRepository emailVerificationRepository;
 
@@ -39,34 +40,32 @@ public class EventUserService {
         log.info("Checking email {} is duplicate: {}", email, flag);
 
         // 사용가능한 이메일인 경우 인증메일 발송
-        if (!flag) processSignUp(email);
+        if (!flag) processSignup(email);
 
         return flag;
     }
 
     // 인증 코드를 발송할 때 사용할 임시 회원가입 로직
-    // 인증 코드를 데이터베이스에 저장하려면 회원정보가 필요
-    private void processSignUp(String email) {
-        // 1. 임시회원가입
+    // 인증코드를 데이터베이스에 저장하려면 회원정보가 필요
+    private void processSignup(String email) {
+        // 1. 임시 회원가입
         EventUser tempUser = EventUser.builder()
                 .email(email)
                 .build();
 
         EventUser savedUser = eventUserRepository.save(tempUser);
 
-        // 2. 인증메일 발송
+        // 2. 인증 메일 발송
         String code = sendVerificationEmail(email);
 
         // 3. 인증 코드와 만료시간을 DB에 저장
         EmailVerification verification = EmailVerification.builder()
                 .verificationCode(code)
-                .expiryDate(LocalDateTime.now().plusMinutes(5)) // 만료 시간 5분 설정
-                .eventUser(savedUser) // FK
+                .expiryDate(LocalDateTime.now().plusMinutes(5)) // 만료시간 5분 설정
+                .eventUser(savedUser) // FK 설정
                 .build();
-
         emailVerificationRepository.save(verification);
     }
-
 
     // 이메일 인증코드 발송 로직
     private String sendVerificationEmail(String email) {
@@ -113,34 +112,48 @@ public class EventUserService {
         return String.valueOf((int) (Math.random() * 9000) + 1000);
     }
 
+
     /**
      * 클라이언트가 전송한 인증코드를 검증하는 처리
-     *
      */
     public boolean isMatchCode(String email, String code) {
 
-        // 이메일을 통해 사용자의 PF를 조회
+        // 이메일을 통해 사용자의 PK를 조회
         EventUser eventUser = eventUserRepository.findByEmail(email).orElseThrow();
 
-
-        // 사용자의 인증 코드를 FK를 통해 데이터 베이스에서 조회
+        // 사용자의 인증코드를 FK를 통해 데이터베이스에서 조회
         EmailVerification verification
                 = emailVerificationRepository.findByEventUser(eventUser).orElseThrow();
 
         // 코드가 일치하고 만료시간이 지나지 않았는지 체크
         if (
-            code.equals(verification.getVerificationCode())
-            && verification.getExpiryDate().isAfter(LocalDateTime.now())
-        ){
+                code.equals(verification.getVerificationCode())
+                        && verification.getExpiryDate().isAfter(LocalDateTime.now())
+        ) {
+            // 이메일 인증 완료처리
+            eventUser.completeVerifying();
+            eventUserRepository.save(eventUser);
+
+            // 인증번호를 데이터베이스에서 삭제
+            emailVerificationRepository.delete(verification);
+
             return true;
         }
+        // 인증코드가 틀렸거나 만료된 경우 자동으로 인증코드를 재발송
+        updateVerificationCode(email, verification);
         return false;
     }
 
+    // 인증코드 재발급 처리
+    private void updateVerificationCode(String email, EmailVerification verification) {
+
+        // 1. 새인증코드를 생성하고 메일을 재발송
+        String newCode = sendVerificationEmail(email);
+
+        // 2. 데이터베이스에 인증코드와 만료시간을 갱신
+        verification.updateNewCode(newCode);
+        emailVerificationRepository.save(verification);
+    }
+
+
 }
-
-
-
-
-
-
