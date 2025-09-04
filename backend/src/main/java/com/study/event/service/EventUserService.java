@@ -1,5 +1,6 @@
 package com.study.event.service;
 
+import com.study.event.domain.dto.request.LoginRequest;
 import com.study.event.domain.dto.request.SignupRequest;
 import com.study.event.domain.entity.EmailVerification;
 import com.study.event.domain.entity.EventUser;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -42,10 +44,39 @@ public class EventUserService {
         boolean flag = eventUserRepository.existsByEmail(email);
         log.info("Checking email {} is duplicate: {}", email, flag);
 
+        // 이메일이 중복되었지만 회원가입이 마무리되지않은 회원은
+        // 중복을 무시하고 인증코드를 재발송
+        if (flag && notFinish(email)) {
+            return false;
+        }
+
         // 사용가능한 이메일인 경우 인증메일 발송
         if (!flag) processSignup(email);
 
         return flag;
+    }
+
+    private boolean notFinish(String email) {
+
+        // 회원가입이 중단된 회원정보를 조회
+        EventUser foundUser = eventUserRepository.findByEmail(email).orElseThrow();
+
+        // 실제로 중단된 회원인지 재확인
+        if (!foundUser.isEmailVerified() || foundUser.getPassword() == null) {
+            // 인증코드 재생성하고 이메일을 발송
+            Optional<EmailVerification> ev = emailVerificationRepository.findByEventUser(foundUser);
+
+            // 1. 인증코드를 과거에 받은 경우 - UPDATE
+            if (ev.isPresent()) {
+                updateVerificationCode(email, ev.get());
+            } else {
+                // 2. 받지 않은 경우 - 인증을 끝내면 인증코드가 삭제됨 - INSERT
+                generateAndSendCode(email, foundUser);
+            }
+            return true;
+        }
+
+        return false;
     }
 
     // 인증 코드를 발송할 때 사용할 임시 회원가입 로직
@@ -58,6 +89,10 @@ public class EventUserService {
 
         EventUser savedUser = eventUserRepository.save(tempUser);
 
+        generateAndSendCode(email, savedUser);
+    }
+
+    private void generateAndSendCode(String email, EventUser savedUser) {
         // 2. 인증 메일 발송
         String code = sendVerificationEmail(email);
 
@@ -166,13 +201,40 @@ public class EventUserService {
         EventUser foundUser = eventUserRepository.findByEmail(dto.email()).orElseThrow(
                 () -> new RuntimeException("임시 회원가입된 정보가 없습니다.")
         );
-        // 이메일 인증을 받았는지 확인
-        if(!foundUser.isEmailVerified()){
+        // 이메일인증을 받았는지 확인
+        if (!foundUser.isEmailVerified()) {
             throw new RuntimeException("이메일 인증이 완료되지 않은 회원입니다.");
         }
 
-        // 데이터베이스에 임시 회원가입된 회원정보의 패스워드와 생성시간을 채워 넣기
+        // 데이터베이스에 임시 회원가입된 회원정보의 패스워드와 생성시간을 채워넣기
         foundUser.confirm(passwordEncoder.encode(dto.password()));
         eventUserRepository.save(foundUser);
     }
+
+    // 로그인 검증하기
+    public void authenticate(LoginRequest dto) {
+
+        // 이메일을 통해 회원가입 여부 확인
+        EventUser foundUser = eventUserRepository.findByEmail(dto.email()).orElseThrow(
+                () -> new RuntimeException("가입된 회원이 아닙니다.")
+        );
+
+        // 회원가입을 중단한 회원에 대해서
+        if (!foundUser.isEmailVerified() || foundUser.getPassword() == null) {
+            throw new RuntimeException("회원가입이 완료되지 않은 회원입니다. 다시 가입해주세요");
+        }
+        // 패스워드 일치 검사
+        if (!passwordEncoder.matches(dto.password(),foundUser.getPassword())) {
+            throw new RuntimeException("비밀번호가 틀렸습니다.");
+        }
+
+        // 로그인 성공 - 토큰 발급
+
+    }
 }
+
+
+
+
+
+
