@@ -3,16 +3,17 @@ import {useEffect, useRef, useState} from 'react';
 import {debounce} from 'lodash';
 import {AUTH_API_URL} from '../../config/host-config.js';
 
-const VerificationInput = ({email}) => {
+const VerificationInput = ({ email, onSuccess }) => {
 
     // 완성된 인증코드를 상태관리
     const [codes, setCodes] = useState(['', '', '', '']);
 
-    // 에러 메세지 상태 관리
+    // 에러 메시지 상태관리
     const [error, setError] = useState('');
 
-    // 인증 코드 만료 타이머 시간을 상태관리
+    // 인증코드 만료 타이머 시간을 상태관리
     const [timer, setTimer] = useState(300);
+
 
     // ref를 배열로 관리하는 법
     const inputRefs = useRef([]);
@@ -40,20 +41,22 @@ const VerificationInput = ({email}) => {
         const {isMatch} = await response.json();
 
         // 검증에 실패했을 경우
-        if (!isMatch){
+        if (!isMatch) {
             // 타이머를 리셋
             setTimer(300);
 
-            // 에러 메세지를 셋팅
+            // 에러메시지를 세팅
             setError('유효하지 않거나 만료된 인증코드입니다. 인증코드를 재발송합니다.')
-            // 인증 코드를 모두 빈칸으로 되돌림
-            setCodes(Array(4).fill(''));
+            // 인증코드를 모두 빈칸으로 되돌림
+            setCodes(Array(4).fill(''))
             // 첫번째 칸으로 재 포커싱
             inputRefs.current[0].focus();
             return;
         }
-        // 검증 성공 시 - 다음 스텝으로 이동하는 신호 올려보내기
+        // 검증 성공시 - 다음 스텝으로 이동하는 신호 올려보내기
         setError('');
+        onSuccess();
+
 
     }, 1000);
 
@@ -67,7 +70,6 @@ const VerificationInput = ({email}) => {
             return;
         }
 
-
         const copyCodes = [...codes];
         copyCodes[index] = inputValue;
 
@@ -77,16 +79,17 @@ const VerificationInput = ({email}) => {
 
         // 모든 인증코드를 입력했을 때 서버에 인증코드를 전송
         if (copyCodes.every(code => code !== '')) {
-            console.log('모든 칸이 입력됨 !', copyCodes);
+            console.log('모든 칸이 입력됨! ', copyCodes);
             const verifyCode = copyCodes.join('');
-            console.log('전송할 인증코드:', verifyCode);
+            console.log('전송할 인증코드: ', verifyCode);
 
             // 서버에 전송
             fetchVerifying(verifyCode);
         }
+
     };
 
-    // 초기 랜더링 시 타이머를 가동
+    // 초기 렌더링 시 타이머를 가동
     useEffect(() => {
 
         const id = setInterval(() => {
@@ -108,7 +111,7 @@ const VerificationInput = ({email}) => {
                         <input
                             ref={($input) => bindRef($input, index)}
                             key={index}
-                            type="text"
+                            type='text'
                             className={styles.codeInput}
                             maxLength={1}
                             onChange={(e) => handleNumber(index, e)}
@@ -120,6 +123,7 @@ const VerificationInput = ({email}) => {
             <div className={styles.timer}>
                 {`${'0' + Math.floor(timer / 60)}:${('0' + (timer % 60)).slice(-2)}`}
             </div>
+
             {error && <p className={styles.errorMessage}>{error}</p>}
         </>
     );
