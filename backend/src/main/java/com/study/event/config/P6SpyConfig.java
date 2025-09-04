@@ -1,4 +1,4 @@
-/*
+
 package com.study.event.config;
 
 
@@ -38,4 +38,5 @@ public class P6SpyConfig implements MessageFormattingStrategy {
         }
         return sql;
     }
-}*/
+}
+

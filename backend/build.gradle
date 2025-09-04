@@ -53,6 +53,9 @@ dependencies {
 
 	// 쿼리파라미터 추가 외부로그 남기기
 	implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.1'
+
+	// 쿼리파라미터 추가 외부로그 남기기
+	implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.1'
 }
 
 tasks.named('test') {
