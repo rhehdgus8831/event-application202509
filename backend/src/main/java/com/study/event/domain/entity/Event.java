@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
-@ToString
+@ToString(exclude = {"eventUser"})
 @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
@@ -39,6 +39,11 @@ public class Event {
 
     @CreationTimestamp
     private LocalDateTime createdAt; // 이벤트 등록 날짜
+
+    // 회원과의 연관관계를 설정 - 단반향 매핑
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ev_user_id")
+    private EventUser eventUser;
 
     public void changeEvent(EventCreate dto) {
         this.title = dto.title();
