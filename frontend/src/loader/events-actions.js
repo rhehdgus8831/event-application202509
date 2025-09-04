@@ -1,11 +1,9 @@
-
-import {AUTH_API_URL, EVENT_API_URL} from '../config/host-config.js';
-
 // 이벤트를 등록하는 함수
 
 import {redirect} from 'react-router-dom';
+import {AUTH_API_URL, EVENT_API_URL} from '../config/host-config.js';
 
-export const saveAction = async ({ request , params }) => {
+export const saveAction = async ({ request, params }) => {
     // console.log('save action!!');
 
     // form에 입력한 값 가져오기
@@ -20,9 +18,10 @@ export const saveAction = async ({ request , params }) => {
     };
 
     let requestUrl = EVENT_API_URL;
-    if (request.method === 'PUT'){
+    if (request.method === 'PUT') {
         requestUrl += `/${params.eventId}`;
     }
+
     const response = await fetch(requestUrl, {
         method: request.method,
         headers: {
@@ -40,23 +39,22 @@ export const saveAction = async ({ request , params }) => {
 };
 
 // 삭제처리 액션 함수
-export const deleteAction = async ({ params }) => {
+export const deleteAction = async ({params}) => {
     if (!confirm('정말 삭제하시겠습니까?')) return;
 
-    console.log(`삭제 액션 함수 실행 !`);
+    console.log('삭제 액션 함수 호출!');
 
     const res = await fetch(`${EVENT_API_URL}/${params.eventId}`, {
         method: 'DELETE'
     });
 
     return redirect('/events');
-
-}
+};
 
 // 로그인 처리 액션함수
-export const loginAction = async ({request}) => {
+export const loginAction = async ({ request }) => {
 
-    // 입력 데이터 읽기
+    // 입력데이터 읽기
     const formData = await request.formData();
 
     const payload = {
@@ -74,8 +72,13 @@ export const loginAction = async ({request}) => {
 
     if (response.status === 422) {
         // 서버에서 응답한 데이터를 컴포넌트에서 가져다 사용할 수 있게 데이터를 리턴.
-        // 그럼 action 함수를 처리하는 컴포넌트는 useActionData라는 훅으로 사용 가능
+        // 그럼 action함수를 처리하는 컴포넌트는 useActionData라는 훅으로 사용가능
         return data.message;
     }
 
-}
+    // 로그인에 성공했을 때 - 토큰을 저장
+    localStorage.setItem('userData', JSON.stringify(data));
+
+    return redirect('/');
+
+};
