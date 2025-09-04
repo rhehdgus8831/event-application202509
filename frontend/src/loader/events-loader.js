@@ -1,4 +1,3 @@
-
 import {EVENT_API_URL} from '../config/host-config.js';
 
 
@@ -14,4 +13,9 @@ export const eventsListLoader = async () => {
 
 export const eventDetailLoader = async ({params}) => {
     return await fetch(`${EVENT_API_URL}/${params.eventId}`);
+}
+
+// 로컬 스토리지에 토큰 데이터를 불러오는 로더
+export const userDataLoader = () => {
+    return JSON.parse(localStorage.getItem('userData'));
 }
